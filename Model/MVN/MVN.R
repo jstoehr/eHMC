@@ -25,7 +25,7 @@ ind.lp <- 101
 
 # --- Data Processing: ESS ---
 ESS.NUTS <- ESS.vec(mod, n.exp, range.p, ind, ind.lp)
-ESS.eHMC <- ESS.vec(mod, n.exp, range.p, ind, ind.lp, algo = "eHMC")
+ESS.eHMC <- ESS.vec(mod, n.exp, range.p, ind, ind.lp, algo = "eHMC_Summary")
 
 result.ESS <- rbind(transform.output(ESS.NUTS), transform.output(ESS.eHMC))
 summary.ESS <- rbind(data.frame(criterion = "min(ESS) / gradient", sampler = "NUTS", p = range.p/100,
@@ -35,8 +35,8 @@ summary.ESS <- rbind(data.frame(criterion = "min(ESS) / gradient", sampler = "NU
 
 
 # --- Data Processing: ESS ---
-ESJD.NUTS <- ESJD.vec(mod, n.exp, range.p, ind, ind.lp)
-ESJD.eHMC <- ESJD.vec(mod, n.exp, range.p, ind, ind.lp, algo = "eHMC")
+ESJD.NUTS <- ESJD.vec(mod, n.exp, range.p)
+ESJD.eHMC <- ESJD.vec(mod, n.exp, range.p, algo = "eHMC_Summary")
 
 result.ESJD <- rbind(transform.output(ESJD.NUTS), transform.output(ESJD.eHMC))
 summary.ESJD <- rbind(data.frame(criterion = "ESJD / gradient", sampler = "NUTS", p = range.p/100,

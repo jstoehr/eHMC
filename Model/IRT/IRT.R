@@ -34,10 +34,10 @@ ESS.NUTS.a <- ESS.vec(mod, n.exp, range.p, ind.a, ind.lp)
 ESS.NUTS.b <- ESS.vec(mod, n.exp, range.p, ind.b, ind.lp)
 ESS.NUTS.hyper <- ESS.vec(mod, n.exp, range.p, ind.hyper, ind.lp)
 
-ESS.eHMC.eta <- ESS.vec(mod, n.exp, range.p, ind.eta, ind.lp, algo = "eHMC")
-ESS.eHMC.a <- ESS.vec(mod, n.exp, range.p, ind.a, ind.lp, algo = "eHMC")
-ESS.eHMC.b <- ESS.vec(mod, n.exp, range.p, ind.b, ind.lp, algo = "eHMC")
-ESS.eHMC.hyper <- ESS.vec(mod, n.exp, range.p, ind.hyper, ind.lp, algo = "eHMC")
+ESS.eHMC.eta <- ESS.vec(mod, n.exp, range.p, ind.eta, ind.lp, algo = "eHMC_Summary")
+ESS.eHMC.a <- ESS.vec(mod, n.exp, range.p, ind.a, ind.lp, algo = "eHMC_Summary")
+ESS.eHMC.b <- ESS.vec(mod, n.exp, range.p, ind.b, ind.lp, algo = "eHMC_Summary")
+ESS.eHMC.hyper <- ESS.vec(mod, n.exp, range.p, ind.hyper, ind.lp, algo = "eHMC_Summary")
 
 result.ESS <- rbind(data.frame(var = "eta: min(ESS) / gradient", transform.output(ESS.NUTS.eta)),
                     data.frame(var = "a: min(ESS) / gradient", transform.output(ESS.NUTS.a)),
@@ -74,16 +74,28 @@ ggplot(data = result.ESS, mapping = aes(x = p, y = min.ess)) +
 
 x <- apply(ESS.NUTS.eta$output[,2,], 1, max)
 y <- apply(ESS.eHMC.eta$output[,2,], 1, max)
-summary(x)
-summary(y)
-boxplot(x,y)
 mean(x)
 sd(x)
 mean(y)
 sd(y)
 mean(y)/mean(x)
 
-plot(apply(ESS.NUTS.b$output[, 2,], 2, mean))
-lines(apply(ESS.eHMC.b$output[, 2,], 2, mean))
+x <- apply(ESS.NUTS.a$output[,2,], 1, max)
+y <- apply(ESS.eHMC.a$output[,2,], 1, max)
+mean(x)
+sd(x)
+mean(y)
+sd(y)
+mean(y)/mean(x)
+
+x <- apply(ESS.NUTS.b$output[,2,], 1, max)
+y <- apply(ESS.eHMC.b$output[,2,], 1, max)
+mean(x)
+sd(x)
+mean(y)
+sd(y)
+mean(y)/mean(x)
+
+
 
 

@@ -4,6 +4,8 @@
 #        ESJD_x, ESJD_lp
 #        Computation Cost, Tuned epsilon, Exptected L, empirical accept probability
 library(mcmcse)
+setwd("~/git/eHMC/prHMC/Model/SIR/SimulationResult")
+
 Index2 <- 5:8
 ################################ Data Processing #################################
 NUTS_KS <- matrix(0,nrow=40,ncol=4)
@@ -41,9 +43,9 @@ ESSTransformed[IndexSampler, "Sampler"] <- "eHMCq"
 IndexSampler <- which(ESSTransformed[,"Sampler"] == 3)
 ESSTransformed[IndexSampler, "Sampler"] <- "eHMCu"
 IndexSampler <- which(ESSTransformed[,"Sampler"] == 4)
-ESSTransformed[IndexSampler, "Sampler"] <- "MCHMC"
+ESSTransformed[IndexSampler, "Sampler"] <- "prHMC"
 
-neworder <- c("NUTS","eHMC","eHMCq","eHMCu","MCHMC")
+neworder <- c("NUTS","eHMC","eHMCq","eHMCu","prHMC")
 library(plyr)  ## or dplyr (transform -> mutate)
 library(ggplot2)
 ESSTransformed <- arrange(transform(ESSTransformed,
@@ -69,8 +71,8 @@ ggplot(data=ESSTransformed, mapping = aes(x=Sampler, y=y)) +
 #neworder <- c("NUTS","eHMC","eHMCq","eHMCu","MCHMC")
 Ind1 <- which(ESSTransformed[,"Sampler"] == "NUTS")
 Ind2 <- which(ESSTransformed[,"Sampler"] == "eHMC")
-Ind3 <- which(ESSTransformed[,"Sampler"] == "MCHMC")
-neworder <- c("NUTS","eHMC","MCHMC")
+Ind3 <- which(ESSTransformed[,"Sampler"] == "prHMC")
+neworder <- c("NUTS","eHMC","prHMC")
 ESSTransformed <- ESSTransformed[c(Ind1, Ind2, Ind3),]
 ESSTransformed <- arrange(transform(ESSTransformed,
                                     Sampler=factor(Sampler,levels=neworder)),Sampler)
@@ -100,9 +102,9 @@ ESSTransformed[IndexSampler, "Sampler"] <- "eHMCq"
 IndexSampler <- which(ESSTransformed[,"Sampler"] == 3)
 ESSTransformed[IndexSampler, "Sampler"] <- "eHMCu"
 IndexSampler <- which(ESSTransformed[,"Sampler"] == 4)
-ESSTransformed[IndexSampler, "Sampler"] <- "MCHMC"
+ESSTransformed[IndexSampler, "Sampler"] <- "prHMC"
 
-neworder <- c("NUTS","eHMC","eHMCq","eHMCu","MCHMC")
+neworder <- c("NUTS","eHMC","eHMCq","eHMCu","prHMC")
 library(plyr)  ## or dplyr (transform -> mutate)
 library(ggplot2)
 ESSTransformed <- arrange(transform(ESSTransformed,
@@ -128,14 +130,17 @@ ggplot(data=ESSTransformed, mapping = aes(x=Sampler, y=y)) +
 #neworder <- c("NUTS","eHMC","eHMCq","eHMCu","MCHMC")
 Ind1 <- which(ESSTransformed[,"Sampler"] == "NUTS")
 Ind2 <- which(ESSTransformed[,"Sampler"] == "eHMC")
-Ind3 <- which(ESSTransformed[,"Sampler"] == "MCHMC")
-neworder <- c("NUTS","eHMC","MCHMC")
+Ind3 <- which(ESSTransformed[,"Sampler"] == "prHMC")
+neworder <- c("NUTS","eHMC","prHMC")
 ESSTransformed <- ESSTransformed[c(Ind1, Ind2, Ind3),]
 ESSTransformed <- arrange(transform(ESSTransformed,
                                     Sampler=factor(Sampler,levels=neworder)),Sampler)
-ggplot(data=ESSTransformed, mapping = aes(x=Sampler, y=y)) +
-  geom_boxplot(mapping=aes(color=Sampler, fill=Sampler)) +
-  ylab("Kolmogorov-Smirnov distance")+
-  ggtitle("SIR: Mean KS of" ~theta) +
-  theme(plot.title = element_text(hjust = 0.5))
+ggplot(data = ESSTransformed, mapping = aes(x = Sampler, y = y)) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(), legend.position = "none") +
+  geom_boxplot(mapping = aes(color = Sampler, fill = Sampler))
+#ggtitle("Logit: Max KS of" ~theta) +
+# theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("SIR_diagonal_KS.pdf", device = "pdf", width = 14, height = 7, units = "cm", dpi = 600)
 

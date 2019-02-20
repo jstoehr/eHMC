@@ -25,7 +25,7 @@ ind.lp <- 26
 
 # --- Data Processing: ESS ---
 ESS.NUTS <- ESS.vec(mod, n.exp, range.p, ind, ind.lp)
-ESS.eHMC <- ESS.vec(mod, n.exp, range.p, ind, ind.lp, algo = "eHMC")
+ESS.eHMC <- ESS.vec(mod, n.exp, range.p, ind, ind.lp, algo = "eHMC_Summary")
 
 result.ESS <- rbind(transform.output(ESS.NUTS), transform.output(ESS.eHMC))
 summary.ESS <- rbind(data.frame(criterion = "min(ESS) / gradient", sampler = "NUTS", p = range.p/100,
@@ -35,8 +35,8 @@ summary.ESS <- rbind(data.frame(criterion = "min(ESS) / gradient", sampler = "NU
 
 
 # --- Data Processing: ESS ---
-ESJD.NUTS <- ESJD.vec(mod, n.exp, range.p, ind, ind.lp)
-ESJD.eHMC <- ESJD.vec(mod, n.exp, range.p, ind, ind.lp, algo = "eHMC")
+ESJD.NUTS <- ESJD.vec(mod, n.exp, range.p)
+ESJD.eHMC <- ESJD.vec(mod, n.exp, range.p, algo = "eHMC_Summary")
 
 result.ESJD <- rbind(transform.output(ESJD.NUTS), transform.output(ESJD.eHMC))
 summary.ESJD <- rbind(data.frame(criterion = "ESJD / gradient", sampler = "NUTS", p = range.p/100,
@@ -64,6 +64,18 @@ ggplot(data = df.ans, mapping = aes(x = p, y = val)) +
 
 ggsave(f.name, device = "pdf", width = 14, height = 10, units = "cm", dpi = 600)
 
+x <- apply(ESS.NUTS$output[,2,], 1, max)
+y <- apply(ESS.eHMC$output[,2,], 1, max)
+mean(x)
+sd(x)
+mean(y)
+sd(y)
+mean(y)/mean(x)
+
+x <- resume.vec(mod, n.exp, range.p, ind, ind.lp, algo = "NUTS_Summary")
+y <- resume.vec(mod, n.exp, range.p, ind, ind.lp, algo = "eHMC_Summary")
+x$output[,,5]
+y$output[,,5]
 
 # --- Old version ---
 # p1 <- ggplot(data = result.ESS[, 1:3], mapping = aes(x = p, y = min.ess)) + 

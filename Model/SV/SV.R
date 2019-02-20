@@ -32,10 +32,10 @@ ESS.NUTS.phi <- ESS.vec(mod, n.exp, range.p, ind.phi, ind.lp)
 ESS.NUTS.kappa <- ESS.vec(mod, n.exp, range.p, ind.kappa, ind.lp)
 ESS.NUTS.sigma <- ESS.vec(mod, n.exp, range.p, ind.sigma, ind.lp)
 
-ESS.eHMC.x <- ESS.vec(mod, n.exp, range.p, ind.x, ind.lp, algo = "eHMC")
-ESS.eHMC.phi <- ESS.vec(mod, n.exp, range.p, ind.phi, ind.lp, algo = "eHMC")
-ESS.eHMC.kappa <- ESS.vec(mod, n.exp, range.p, ind.kappa, ind.lp, algo = "eHMC")
-ESS.eHMC.sigma <- ESS.vec(mod, n.exp, range.p, ind.sigma, ind.lp, algo = "eHMC")
+ESS.eHMC.x <- ESS.vec(mod, n.exp, range.p, ind.x, ind.lp, algo = "eHMC_Summary")
+ESS.eHMC.phi <- ESS.vec(mod, n.exp, range.p, ind.phi, ind.lp, algo = "eHMC_Summary")
+ESS.eHMC.kappa <- ESS.vec(mod, n.exp, range.p, ind.kappa, ind.lp, algo = "eHMC_Summary")
+ESS.eHMC.sigma <- ESS.vec(mod, n.exp, range.p, ind.sigma, ind.lp, algo = "eHMC_Summary")
 
 result.ESS <- rbind(data.frame(var = "x: min(ESS) / gradient", transform.output(ESS.NUTS.x)),
                     data.frame(var = "phi: ESS / gradient", transform.output(ESS.NUTS.phi)),
@@ -80,32 +80,35 @@ ggsave(paste(f.name, "ESS.pdf", sep = "_"), device = "pdf", width = 14, height =
 
 
 # --- Data Processing: ESS ---
-ESJD.NUTS <- ESJD.vec(mod, n.exp, range.p, ind, ind.lp)
-ESJD.eHMC <- ESJD.vec(mod, n.exp, range.p, ind, ind.lp, algo = "eHMC")
+ESJD.NUTS.x <- ESJD.vec(mod, n.exp, range.p, param = "ESJD_x")
+ESJD.NUTS <- ESJD.vec(mod, n.exp, range.p)
+ESJD.eHMC.x <- ESJD.vec(mod, n.exp, range.p, algo = "eHMC_Summary", param = "ESJD_x")
+ESJD.eHMC <- ESJD.vec(mod, n.exp, range.p, algo = "eHMC_Summary")
 
-result.ESJD <- rbind(transform.output(ESJD.NUTS), transform.output(ESJD.eHMC))
-summary.ESJD <- rbind(data.frame(criterion = "ESJD / gradient", sampler = "NUTS", p = range.p/100,
+result.ESJD <- rbind(data.frame(var = "x: ESJD / gradient", transform.output(ESJD.NUTS.x)), 
+                     data.frame(var = "x: ESJD / gradient", transform.output(ESJD.eHMC.x)),
+                     data.frame(var = "theta: ESJD / gradient", transform.output(ESJD.NUTS)),
+                     data.frame(var = "theta: ESJD / gradient", transform.output(ESJD.eHMC)))
+summary.ESJD <- rbind(data.frame(var = "x: ESJD / gradient", sampler = "NUTS", p = range.p/100,
+                                 val = apply(ESJD.NUTS.x$output[,2,], 2, median)),
+                      data.frame(var = "x: ESJD / gradient", sampler = "eHMC", p = range.p/100,
+                                 val = apply(ESJD.eHMC.x$output[,2,], 2, median)),
+                      data.frame(var = "theta: ESJD / gradient", sampler = "NUTS", p = range.p/100,
                                  val = apply(ESJD.NUTS$output[,2,], 2, median)),
-                      data.frame(criterion = "ESJD / gradient", sampler = "eHMC", p = range.p/100,
+                      data.frame(var = "theta: ESJD / gradient", sampler = "eHMC", p = range.p/100,
                                  val = apply(ESJD.eHMC$output[,2,], 2, median)))
 
-# --- Global data.frame ---
-df.ans <- rbind(data.frame(criterion = "min(ESS) / gradient", 
-                           result.ESS[, 1:2], val = result.ESS[, 3]),
-                data.frame(criterion = "ESJD / gradient", 
-                           result.ESJD[, 1:2], val = result.ESJD[, 3]))
-
-df.sum <- rbind(summary.ESS, summary.ESJD)
-
-
-ggplot(data = df.ans, mapping = aes(x = p, y = val)) +
+# Removing the outlyer 737
+ggplot(data = result.ESJD[-737, ], mapping = aes(x = p, y = esjd)) +
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
         axis.title.y = element_blank()) +
+  scale_y_continuous(labels = function(x) format(x, scientific = F, digits = 2)) +
   geom_point(alpha = 1, size = 0.4) +
-  facet_grid(rows = vars(factor(criterion)), cols = vars(factor(sampler)), scales = "free_y") +
-  geom_line(data = df.sum, mapping = aes(x = p, y = val), color = "red", size = 1) +
+  facet_grid(var ~ sampler, 
+             scales = "free_y", labeller = label_parsed) +
+  geom_line(data = summary.ESJD, mapping = aes(x = p, y = val), color = "red", size = 1) +
   xlab("Targeted acceptance probability:" ~p[0])
 
-ggsave(f.name, device = "pdf", width = 14, height = 10, units = "cm", dpi = 600)
+ggsave(paste(f.name, "ESJD.pdf", sep = "_"), device = "pdf", width = 14, height = 10, units = "cm", dpi = 600)
 
 
