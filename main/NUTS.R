@@ -54,6 +54,8 @@ fit <- stan(model_stan,
 # --- Saving output
 save(fit, file = algo_name, sep = "_")
 
+
+
 # --- Computing the number of leapfrog for each chains
 sampler_params <- get_sampler_params(fit, inc_warmup = FALSE)
 n_leapfrog_per_chain_nuts <- sapply(
@@ -123,7 +125,11 @@ for (k in 2:n_param) {
 
   x_ans <- diagnosis_x_chain(ans, n_iter, n_leapfrog_x_chain)
 
-  ans <- ans %>% select(-starts_with("lag"), -starts_with("gam"))
+  ans <- ans %>% select(
+    -starts_with("lag"),
+    -starts_with("auto"),
+    -starts_with("gam")
+  )
   ans <- add_column(ans,
     chain = seq_len(n_chain),
     param = param_names[k], i_param = k,
