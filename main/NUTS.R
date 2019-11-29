@@ -96,7 +96,11 @@ ess_per_leap <- unlist(
 
 x_stat_nuts <- diagnosis_x_chain(stat_nuts, n_iter, n_leapfrog_x_chain)
 
-stat_nuts <- stat_nuts %>% select(-starts_with("lag"), -starts_with("gam"))
+stat_nuts <- stat_nuts %>% select(
+  -starts_with("lag"),
+  -starts_with("auto"),
+  -starts_with("gam")
+)
 stat_nuts <- add_column(stat_nuts,
   chain = seq_len(n_chain),
   param = param_names[1], i_param = 1,

@@ -14,7 +14,7 @@ diagnosis_single_chain <- function(f_chain) {
     var = var_chain,
     ess = n * temp$gamma0 / temp$var.con,
     lag_cut = length(temp$Gamma.con),
-    gam_0 = temp$gamma0,
+    auto_cov_0 = temp$gamma0,
     gam = matrix(gam, nrow = 1)
   ))
 }

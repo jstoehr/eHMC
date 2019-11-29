@@ -211,6 +211,7 @@ for (i in (seq_len(n_param) + 1)) {
 # ------ Output with the stat for each chain and each parameter
 stat_ehmc <- stat_ehmc %>% select(
   -starts_with("lag"),
+  -starts_with("auto"),
   -starts_with("gam")
 )
 
