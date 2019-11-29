@@ -1,6 +1,7 @@
 
-.DS_Store
+*.DS_Store
 *.RData
 *.pbs
+*.Rhistory
 main/combine_result.R
 
