@@ -1,7 +1,7 @@
 
-.DS_Store
+*.DS_Store
 *.RData
-Model/.DS_Store
 *.pbs
+*.Rhistory
 main/combine_result.R
-model/SVM/U_grad_U_wrong.R
+
