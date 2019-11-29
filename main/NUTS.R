@@ -54,8 +54,6 @@ fit <- stan(model_stan,
 # --- Saving output
 save(fit, file = algo_name, sep = "_")
 
-
-
 # --- Computing the number of leapfrog for each chains
 sampler_params <- get_sampler_params(fit, inc_warmup = FALSE)
 n_leapfrog_per_chain_nuts <- sapply(

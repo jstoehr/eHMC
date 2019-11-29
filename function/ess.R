@@ -5,15 +5,26 @@ diagnosis_single_chain <- function(f_chain) {
   var_chain <- var(f_chain)
   # --- Estimating the ESS using the initial convex sequence estimator of Geyer
   temp <- initseq(f_chain)
-  lag_cut <- length(temp$Gamma.con)
   gam <- rep(0, n %/% 2 + 1)
-  gam[1:lag_cut] <- temp$Gamma.con
+  if (temp$var.con > 0) {
+    lag_cut <- length(temp$Gamma.con)
+    gam[1:lag_cut] <- temp$Gamma.con
+    temp_var <- temp$var.con
+  } else if (temp$var.dec > 0) {
+    lag_cut <- length(temp$Gamma.dec)
+    gam[1:lag_cut] <- temp$Gamma.dec
+    temp_var <- temp$var.dec
+  } else {
+    lag_cut <- length(temp$Gamma.pos)
+    gam[1:lag_cut] <- temp$Gamma.pos
+    temp_var <- temp$var.pos
+  }
 
   return(data.frame(
     mean = mean_chain,
     var = var_chain,
-    ess = n * temp$gamma0 / temp$var.con,
-    lag_cut = length(temp$Gamma.con),
+    ess = n * temp$gamma0 / temp_var,
+    lag_cut = lag_cut,
     auto_cov_0 = temp$gamma0,
     gam = matrix(gam, nrow = 1)
   ))

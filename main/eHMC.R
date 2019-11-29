@@ -71,7 +71,7 @@ par_eHMC <- function(i, start, iter, U, grad_U, eps, L0,
   # --------- esjd
   esjd <- mean(rowSums((df[-1, -ncol(df)] - df[-iter, -ncol(df)])^2))
   # --------- ess
-  ans <- sapply(seq_len(ncol(df)), par_diagnosis_chain, ehmc_sample)
+  ans <- sapply(seq_len(ncol(df)), par_diagnosis_chain, df)
   temp <- row.names(ans)
   ans <- data.frame(t(matrix(unlist(ans), nrow = nrow(ans))))
   colnames(ans) <- temp
