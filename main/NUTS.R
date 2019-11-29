@@ -37,24 +37,22 @@ exp_name <- paste(model_name, M_type, as.character(100 * delta), sep = "_")
 algo_name <- paste("NUTS", exp_name, ".RData", sep = "_")
 
 
-# fit <- stan(model_stan,
-#   data = data,
-#   chains = n_chain,
-#   iter = iter,
-#   warmup = warmup,
-#   save_dso = FALSE,
-#   verbose = FALSE,
-#   algorithm = "NUTS",
-#   control = list(
-#     adapt_engaged = TRUE, stepsize = 0.01, adapt_delta = delta,
-#     metric = M_type, max_treedepth = 14
-#   )
-# )
+fit <- stan(model_stan,
+  data = data,
+  chains = n_chain,
+  iter = iter,
+  warmup = warmup,
+  save_dso = FALSE,
+  verbose = FALSE,
+  algorithm = "NUTS",
+  control = list(
+    adapt_engaged = TRUE, stepsize = 0.01, adapt_delta = delta,
+    metric = M_type, max_treedepth = 14
+  )
+)
 
 # --- Saving output
-# save(fit, file = algo_name, sep = "_")
-
-load(algo_name)
+save(fit, file = algo_name, sep = "_")
 
 # --- Computing the number of leapfrog for each chains
 sampler_params <- get_sampler_params(fit, inc_warmup = FALSE)

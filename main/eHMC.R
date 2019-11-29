@@ -160,7 +160,7 @@ registerDoParallel(cl)
 # --- Running eHMC on the different cores
 result_ehmc <- parLapplyLB(
   cl, first_chain:last_chain, par_eHMC, start,
-  iter, warmup, U, grad_U, eps, L0, inv_M,
+  iter, U, grad_U, eps, L0, inv_M,
   data, algo_name, model_stan, do_fit
 )
 
