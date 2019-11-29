@@ -1,4 +1,4 @@
-#R code for eHMC
+# R code for eHMC
 
 Folder "main" contains executable to run various experiments on NUTS and eHMC
 
