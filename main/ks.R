@@ -59,7 +59,7 @@ if (model_name == "MVN") {
 n_cores <- as.numeric(args[1])
 cl <- makeCluster(n_cores, type = "FORK")
 clusterEvalQ(cl, .libPaths("~/local/R_libs/"))
-clusterExport(cl, c("load_data", "dist_pi_hat"))
+clusterExport(cl, c("dist_pi_hat"))
 registerDoParallel(cl)
 
 # --- Computing the values of pi for the chain
