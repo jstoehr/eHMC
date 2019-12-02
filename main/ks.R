@@ -37,7 +37,7 @@ n_chain <- as.numeric(args[4])
 exp_name <- paste(model_name, M_type, 80, sep = "_")
 
 # --- Empirical distribution function for the ground truth
-load(paste("NUTS", exp_name, "long_run_.RData", sep = "_"))
+load(paste("log_prob_NUTS", exp_name, "long_run_.RData", sep = "_"))
 data <- as.array(fit)
 bound <- range(data[, , "lp__"])
 f_hat_ground <- ecdf(data[, , "lp__"])
@@ -47,14 +47,12 @@ rm(data, fit)
 ks_nuts <- numeric(n_chain)
 ks_ehmc <- numeric(n_chain)
 # --- Data for NUTS
-load(paste("NUTS", exp_name, ".RData", sep = "_"))
-data_nuts <- as.array(fit)
-data_nuts <- data_nuts[, , "lp__"]
-rm(fit)
+load(paste("log_prob_NUTS", exp_name, ".RData", sep = "_"))
+
 # --- Data for eHMC
-load_data <- function(i, exp_name) {
-  load(paste("eHMC", exp_name, as.character(i), ".RData", sep = "_"))
-  return(ehmc_sample[, "log_prob"])
+load(paste("log_prob_eHMC", exp_name, ".RData", sep = "_"))
+if (model_name == "MVN") {
+  log_prob_ehmc <- log_prob_ehmc - 0.5 * d * log(2 * pi) - 0.5 * log(det(A))
 }
 
 # --- Open Cluster
@@ -67,11 +65,11 @@ registerDoParallel(cl)
 data_ehmc <- parSapplyLB(cl, seq_len(n_chain), load_data, exp_name)
 
 # --- Computing the values of pi for the chain
-bound <- range(c(bound, range(data_nuts), range(data_ehmc)))
+bound <- range(c(bound, range(log_prob_nuts), range(log_prob_ehmc)))
 x <- seq(bound[1], bound[2], 0.01)
 dist_pi_ground <- f_hat_ground(x)
-dist_pi_nuts <- parSapplyLB(cl, seq_len(n_chain), dist_pi_hat, data_nuts, x)
-dist_pi_ehmc <- parSapplyLB(cl, seq_len(n_chain), dist_pi_hat, data_ehmc, x)
+dist_pi_nuts <- parSapplyLB(cl, seq_len(n_chain), dist_pi_hat, log_prob_nuts, x)
+dist_pi_ehmc <- parSapplyLB(cl, seq_len(n_chain), dist_pi_hat, log_prob_ehmc, x)
 
 # --- Computing the ks divergence
 ks_nuts <- apply(abs(dist_pi_nuts - dist_pi_ground), 2, max)

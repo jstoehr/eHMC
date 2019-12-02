@@ -172,10 +172,10 @@ for (j in seq_len(n_chain)) {
 log_prob_nuts <- data[, , n_param]
 
 save(log_prob_nuts, n_leapfrog_nuts, energy_nuts,
-  file = paste("log_prop", algo_name, ".RData", sep = "_")
+  file = paste("log_prob", algo_name, sep = "_")
 )
 save(stat_nuts, x_stat_nuts, summary_nuts,
-  file = paste("result", algo_name, ".RData", sep = "_")
+  file = paste("result", algo_name, sep = "_")
 )
 # --- Close Cluster
 stopCluster(cl)
