@@ -37,7 +37,7 @@ n_chain <- as.numeric(args[4])
 exp_name <- paste(model_name, M_type, 80, sep = "_")
 
 # --- Empirical distribution function for the ground truth
-load(paste("log_prob_NUTS", exp_name, "long_run_.RData", sep = "_"))
+load(paste("NUTS", exp_name, "long_run_.RData", sep = "_"))
 data <- as.array(fit)
 bound <- range(data[, , "lp__"])
 f_hat_ground <- ecdf(data[, , "lp__"])
