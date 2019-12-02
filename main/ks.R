@@ -62,8 +62,6 @@ clusterEvalQ(cl, .libPaths("~/local/R_libs/"))
 clusterExport(cl, c("load_data", "dist_pi_hat"))
 registerDoParallel(cl)
 
-data_ehmc <- parSapplyLB(cl, seq_len(n_chain), load_data, exp_name)
-
 # --- Computing the values of pi for the chain
 bound <- range(c(bound, range(log_prob_nuts), range(log_prob_ehmc)))
 x <- seq(bound[1], bound[2], 0.01)
