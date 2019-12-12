@@ -26,3 +26,5 @@ boxplot(as.numeric(n_leapfrog_ehmc[1, -1]), as.numeric(n_leapfrog_nuts[1, -1]))
 
 plot(dist_pi_ehmc[,1])
 lines(dist_pi_ground, col = "red")
+
+

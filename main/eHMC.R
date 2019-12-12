@@ -20,45 +20,51 @@ par_eHMC <- function(i, start, iter, U, grad_U, eps, L0,
     fit <- stan(model_stan, data = data, chains = 0)
     data <- list_modify(data, fit = fit)
   }
-
-  M_i <- diag(1 / as.numeric(inv_M[, i]))
-  inv_M_i <- diag(as.numeric(inv_M[, i]))
-  chol_M_i <- sqrt(M_i)
-  emp_L_i <- L0[, i]
-
-  # --- Old Version
-  # burn_in <- learn_emp_dist(start[i, ], warmup,
-  #                           U, grad_U,
-  #                           as.numeric(eps[i]),
-  #                           L0[i],
-  #                           inv_M_i,
-  #                           chol_M_i,
-  #                           data = data
-  # )
-  # time_burn <- proc.time() - time_elapsed
-  #
-  # emp_L <- burn_in[, "l"]
-  # emp_L <- emp_L[which(!burn_in[, "div"])]
-
-  time_elapsed <- proc.time()
-  ehmc_sample <- eHMC(start[i, ], iter,
-    U, grad_U,
-    as.numeric(eps[i]),
-    emp_L_i,
-    inv_M_i,
-    chol_M_i,
-    data = data
-  )
-  time_elapsed <- proc.time() - time_elapsed
-
-  save(ehmc_sample, time_elapsed,
-    file = paste(algo_name, i, ".RData", sep = "_")
-  )
-
+  
+  if(i == 13 || i == 27){
+    
+    M_i <- diag(1 / as.numeric(inv_M[, i]))
+    inv_M_i <- diag(as.numeric(inv_M[, i]))
+    chol_M_i <- sqrt(M_i)
+    emp_L_i <- L0[, i]
+    
+    # --- Old Version
+    # burn_in <- learn_emp_dist(start[i, ], warmup,
+    #                           U, grad_U,
+    #                           as.numeric(eps[i]),
+    #                           L0[i],
+    #                           inv_M_i,
+    #                           chol_M_i,
+    #                           data = data
+    # )
+    # time_burn <- proc.time() - time_elapsed
+    #
+    # emp_L <- burn_in[, "l"]
+    # emp_L <- emp_L[which(!burn_in[, "div"])]
+    
+    time_elapsed <- proc.time()
+    ehmc_sample <- eHMC(start[i, ], iter,
+                        U, grad_U,
+                        as.numeric(eps[i]),
+                        emp_L_i,
+                        inv_M_i,
+                        chol_M_i,
+                        data = data
+    )
+    time_elapsed <- proc.time() - time_elapsed
+    
+    save(ehmc_sample, time_elapsed,
+         file = paste(algo_name, i, ".RData", sep = "_")
+    )
+    
+  } else {
+    load(paste(algo_name, i, ".RData", sep = "_"))
+  }
+  
   log_prob_ehmc <- ehmc_sample %>% select(
     starts_with("log"), starts_with("L"), starts_with("energy")
   )
-
+  
   # --- Computing statistics on the chain
   # ------ Average accepted moves
   acceptance_rate <- mean(ehmc_sample$move)
@@ -77,9 +83,9 @@ par_eHMC <- function(i, start, iter, U, grad_U, eps, L0,
   colnames(ans) <- temp
   temp <- unlist(ans %>% select(starts_with("ess"))) / n_leapfrog
   ans <- add_column(ans, ess_per_leap = temp, .after = "ess")
-
+  
   param_names <- c(colnames(data$named_param), "log_prob")
-
+  
   return(list(
     stat_ehmc = data.frame(
       chain = i, param = param_names,
@@ -187,7 +193,7 @@ for (i in 2:length(result_ehmc)) {
     summary_ehmc,
     result_ehmc[[i]]$summary_ehmc
   )
-
+  
   temp <- result_ehmc[[i]]$log_prob_ehmc
   log_prob_ehmc[, i] <- temp$log_prob
   n_leapfrog_ehmc[, i] <- temp$L
@@ -216,28 +222,28 @@ stat_ehmc <- stat_ehmc %>% select(
 )
 
 stat_ehmc <- add_column(stat_ehmc,
-  algo = "eHMC", delta = delta, 
-  .before = "chain"
+                        algo = "eHMC", delta = delta, 
+                        .before = "chain"
 )
 
 # ------ Output with the stat for each chain
 summary_ehmc <- add_column(summary_ehmc,
-  algo = "eHMC", delta = delta, 
-  .before = "chain"
+                           algo = "eHMC", delta = delta, 
+                           .before = "chain"
 )
 
 # ------ Output with the stat for each parameter accross the chains
 x_stat_ehmc <- add_column(x_stat_ehmc,
-  algo = "eHMC", delta = delta,
-  param = c(colnames(start), "log_prob"),
-  .before = "i_param"
+                          algo = "eHMC", delta = delta,
+                          param = c(colnames(start), "log_prob"),
+                          .before = "i_param"
 )
 
 save(log_prob_ehmc, n_leapfrog_ehmc, energy_ehmc,
      file = paste("log_prob", algo_name, ".RData", sep = "_"))
 
 save(stat_ehmc, x_stat_ehmc, summary_ehmc, 
-  file = paste("result", algo_name, ".RData", sep = "_")
+     file = paste("result", algo_name, ".RData", sep = "_")
 )
 
 # --- Close Cluster
