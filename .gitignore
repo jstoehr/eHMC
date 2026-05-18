@@ -4,6 +4,7 @@
 .Ruserdata
 .positai
 .DS_Store
+*.egg-info
 *.o
 *.so
 *.parquet
