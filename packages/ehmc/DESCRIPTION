@@ -1,0 +1,26 @@
+Package: ehmc
+Type: Package
+Title: Self-Calibrated Randomized Hamiltonian Monte Carlo by Learning Leapfrog Scale
+Version: 0.1.0
+Authors@R: 
+    person("Julien", "Stoehr", , "stoehr@ceremade.dauphine.fr", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-7813-0185"))
+Description: a self-calibrated Hamiltonian Monte Carlo scheme (eHMC) that randomly samples both the step size and the number of integration steps.
+URL: https://arxiv.org/abs/1810.04449 
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: 
+    R (>= 3.5.0)
+Imports: 
+    methods,
+    Rcpp (>= 0.12.0),
+    RcppParallel (>= 5.0.1)
+LinkingTo: 
+    BH (>= 1.66.0),
+    Rcpp (>= 0.12.0),
+    RcppArmadillo,
+    RcppEigen (>= 0.3.3.3.0),
+    RcppParallel (>= 5.0.1)

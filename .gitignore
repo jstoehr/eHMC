@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+*.RData
+.Ruserdata
+.positai
+.DS_Store
+*.o
+*.so
+*.parquet
+*.pt
+*__pycache__/
+*trash/
