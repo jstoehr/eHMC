@@ -1,8 +1,7 @@
-from typing import Optional
-
 import torch
 import torch.utils.data as data
 import zuko
+
 from zuko.distributions import MultivariateNormal
 from zuko.lazy import UnconditionalDistribution
 
@@ -11,7 +10,7 @@ from .config import FlowConfig
 
 def train_proposal(
     y: torch.Tensor,
-    cov: Optional[torch.Tensor] = None,
+    cov: torch.Tensor | None = None,
     config: FlowConfig = FlowConfig(),
     flow = None
 ):

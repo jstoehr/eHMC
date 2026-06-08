@@ -1,6 +1,8 @@
-import torch
+from typing import Callable, Any
 from dataclasses import dataclass
-from typing import Callable, Tuple
+
+import torch
+
 
 @dataclass
 class FlowConfig:
@@ -23,7 +25,7 @@ class FlowConfig:
     test_fraction: float = 0.2
     architecture: str = "MAF"
     transforms: int = 5
-    hidden_features: Tuple[int, ...] = (64, 64)
+    hidden_features: tuple[int, ...] = (64, 64)
     randperm: bool = True
     max_epochs: int = 512
     patience: int = 30
@@ -55,6 +57,6 @@ class ProposalConfig:
     seed: int = 1
     max_tries: int = 10
     resampling: int = 1
-    data: dict = None
+    data: dict[str, Any] | None = None
     device: torch.device = torch.device("cpu")
     dtype: torch.dtype = torch.float32

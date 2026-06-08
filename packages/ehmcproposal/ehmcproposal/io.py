@@ -1,7 +1,8 @@
+from pathlib import Path
+
 import pandas as pd
 import torch
 
-from pathlib import Path
 
 def save_checkpoint(
     beta_history: list,

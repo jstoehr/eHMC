@@ -1,18 +1,25 @@
-import torch
-import time
 from pathlib import Path
+import time
+
+import torch
+
 from .config import FlowConfig, ProposalConfig
-from .reweighting import normalize_log_weights, effective_sample_size,  reweight_sample
+from .io import load_checkpoint, save_checkpoint
 from .linalg import is_positive_definite
-from .training import train_proposal
 from .r_interface import apply_r_log_pdf
-from .io import save_checkpoint, load_checkpoint
+from .reweighting import (
+    effective_sample_size,
+    normalize_log_weights,
+    reweight_sample,
+)
+from .training import train_proposal
+
 
 def sample_initial_proposal(
     rprop_init, 
     target_log_pdf, 
     n: int, 
-    pconfig: ProposalConfig = ProposalConfig()
+    pconfig: ProposalConfig | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
     """
     Sample from the initial proposal and compute IS log-weights.
@@ -21,7 +28,7 @@ def sample_initial_proposal(
         rprop_init: A function that samples from the initial proposal distribution and computes log probabilities.
         target_log_pdf: An R function that computes the log PDF of the target distribution.
         n (int): The number of samples to draw from the initial proposal.
-        pconfig (ProposalConfig): Configuration parameters for the PMC process, used for setting the random seed.
+        pconfig (ProposalConfig | None): Configuration parameters for the PMC process, used for setting the random seed.
     
     Returns:
         A tuple containing:
@@ -30,7 +37,8 @@ def sample_initial_proposal(
             - w_is (torch.Tensor): The normalized importance weights for the samples.
             - ess (float): The effective sample size (ESS) computed from the normalized importance weights.
     """
-
+    pconfig = ProposalConfig() if pconfig is None else pconfig
+    
     y, lp__ = rprop_init(
         n = n, 
         data = pconfig.data, 
@@ -54,7 +62,7 @@ def sample_initial_proposal(
 def resample_from_initial_proposal(
     rprop_init,
     target_log_pdf,
-    pconfig: ProposalConfig = ProposalConfig(),
+    pconfig: ProposalConfig | None = None
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Generate final eHMC warmup sample from the initial proposal.
@@ -62,13 +70,14 @@ def resample_from_initial_proposal(
     Args:
         rprop_init: A function that samples from the initial proposal distribution and computes log probabilities.
         target_log_pdf: An R function that computes the log PDF of the target distribution.
-        pconfig (ProposalConfig): Configuration parameters for the PMC process.
+        pconfig (ProposalConfig | None): Configuration parameters for the PMC process.
     
     Returns:
         A tuple containing:
             - y (torch.Tensor): The final sample tensor after resampling from the initial proposal.
             - w (torch.Tensor): The normalized importance weights for the final sample.
     """
+    pconfig = ProposalConfig() if pconfig is None else pconfig
 
     if pconfig.resampling == 0:
         n = pconfig.n_warmup
@@ -105,8 +114,8 @@ def resample_from_initial_proposal(
 def pmc_proposal(
     rprop_init,
     target_log_pdf,
-    fconfig: FlowConfig = FlowConfig(),
-    pconfig: ProposalConfig = ProposalConfig(),
+    fconfig: FlowConfig | None = None,
+    pconfig: ProposalConfig | None = None,
     checkpoint_path: str | Path = None,
     flow_path: str | Path = None,
     resume: bool = False
@@ -117,8 +126,8 @@ def pmc_proposal(
     Args:
         rprop_init: A function that samples from the initial proposal distribution and computes log probabilities.
         target_log_pdf: An R function that computes the log PDF of the target distribution.
-        fconfig (FlowConfig): Configuration parameters for the flow model.
-        pconfig (ProposalConfig): Configuration parameters for the PMC process.
+        fconfig (FlowConfig | None): Configuration parameters for the flow model.
+        pconfig (ProposalConfig | None): Configuration parameters for the PMC process.
         checkpoint_path (str or Path, optional): The file path to save checkpoints during the PMC process. Default is None (no checkpoints saved).
         flow_path (str or Path, optional): The file path to save the final trained flow model. Default is None (model not saved).
     
@@ -131,6 +140,11 @@ def pmc_proposal(
         - beta_history (list): History of beta values during the PMC process.
         - elapsed_time (float): Total elapsed time for the PMC process.
     """
+    # --- Setting defaul values for configurations
+    pconfig = ProposalConfig() if pconfig is None else pconfig
+    ess_target = pconfig.ess_train * pconfig.n_train if pconfig.ess_target is None else pconfig.ess_target
+    
+    fconfig = FlowConfig() if fconfig is None else fconfig
     
     # --- Set the seed for reproducibility (if provided)
     if pconfig.seed is not None:
@@ -202,10 +216,10 @@ def pmc_proposal(
         # --- Step 2: use initial proposal if good enough
         # --------------------------------------------------
     
-        if ess_init >= pconfig.ess_target:
+        if ess_init >= ess_target:
             print(
                 f"Initial proposal accepted: ESS = {ess_init:.2f}, "
-                f"target = {pconfig.ess_target:.2f}."
+                f"target = {ess_target:.2f}."
             )
 
             y_warmup, w_warmup = resample_from_initial_proposal(
@@ -236,7 +250,7 @@ def pmc_proposal(
     
     print(f"Initial ESS: {current_ess:.2f}")
     
-    while current_ess < pconfig.ess_target and n_tries < pconfig.max_tries:
+    while current_ess < ess_target and n_tries < pconfig.max_tries:
         start = time.perf_counter()
         n_tries += 1
         # --- Compute the emprical covariance
@@ -277,7 +291,7 @@ def pmc_proposal(
         print(
             f"Try {n_tries}: ESS = {current_ess:.2f}, "
             f"scaled ESS = {scaled_ess:.2f}, "
-            f"Target ESS = {pconfig.ess_target:.2f}, beta = {beta:.4f}, "
+            f"Target ESS = {ess_target:.2f}, beta = {beta:.4f}, "
             f"elapsed = {elapsed_time:.2f}s"
         )
         if checkpoint_path is not None and n_tries % 3 == 0:
@@ -308,10 +322,10 @@ def pmc_proposal(
             log_w_is = log_w_is
         )
         
-    if current_ess < pconfig.ess_target:
+    if current_ess < ess_target:
         raise RuntimeError(
             f"PMC proposal failed: final ESS = {current_ess:.2f}, "
-            f"target ESS = {pconfig.ess_target:.2f}."
+            f"target ESS = {ess_target:.2f}."
         )
 
     # --------------------------------------------------
