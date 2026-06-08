@@ -44,7 +44,7 @@ def sample_initial_proposal(
         data = pconfig.data, 
         seed = pconfig.seed, 
         device = pconfig.device, 
-        dtype = pconfig.dtype
+        dtype = pconfig.dtype,
     )
 
     target_lp__ = apply_r_log_pdf(target_log_pdf, y)
@@ -62,7 +62,7 @@ def sample_initial_proposal(
 def resample_from_initial_proposal(
     rprop_init,
     target_log_pdf,
-    pconfig: ProposalConfig | None = None
+    pconfig: ProposalConfig | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Generate final eHMC warmup sample from the initial proposal.
@@ -90,7 +90,7 @@ def resample_from_initial_proposal(
         rprop_init = rprop_init,
         target_log_pdf = target_log_pdf,
         n = n,
-        pconfig = pconfig
+        pconfig = pconfig,
     )
 
     if pconfig.resampling == 0:
@@ -118,7 +118,7 @@ def pmc_proposal(
     pconfig: ProposalConfig | None = None,
     checkpoint_path: str | Path = None,
     flow_path: str | Path = None,
-    resume: bool = False
+    resume: bool = False,
 ) -> tuple[torch.Tensor, torch.Tensor, list, list, list, float]:
     """
     Perform Population Monte Carlo (PMC) to adapt a proposal distribution for HMC calibration.
@@ -202,7 +202,7 @@ def pmc_proposal(
             rprop_init = rprop_init,
             target_log_pdf = target_log_pdf,
             n = pconfig.n_train,
-            pconfig = pconfig
+            pconfig = pconfig,
         )
     
         ess_history = [None] * (pconfig.max_tries + 1)
@@ -234,7 +234,7 @@ def pmc_proposal(
                 ess_history[:1],
                 scaled_ess_history[:0],
                 beta_history[:1],
-                elapsed_time
+                elapsed_time,
             )
         
     # --------------------------------------------------
@@ -245,7 +245,7 @@ def pmc_proposal(
     scaled_weights, scaled_ess, beta, current_ess = reweight_sample(
         log_w_is, 
         pconfig.ess_train * pconfig.n_train, 
-        beta_init = beta
+        beta_init = beta,
     )
     
     print(f"Initial ESS: {current_ess:.2f}")
@@ -280,7 +280,7 @@ def pmc_proposal(
         scaled_weights, scaled_ess, beta, current_ess = reweight_sample(
             log_w_is, 
             pconfig.ess_train * pconfig.n_train, 
-            beta_init = 0.0
+            beta_init = 0.0,
         )
         end = time.perf_counter()
         elapsed_time += end - start
@@ -319,7 +319,7 @@ def pmc_proposal(
             elapsed_time = elapsed_time,
             path = checkpoint_path,
             y = y,
-            log_w_is = log_w_is
+            log_w_is = log_w_is,
         )
         
     if current_ess < ess_target:
@@ -355,7 +355,7 @@ def pmc_proposal(
             ess_history[: n_tries + 1 + lag], 
             scaled_ess_history[: n_tries + lag], 
             beta_history[: n_tries + 1 + lag], 
-            elapsed_time
+            elapsed_time,
         )
 
     indices = torch.multinomial(w, pconfig.n_warmup, replacement=True)
@@ -372,5 +372,5 @@ def pmc_proposal(
         ess_history[: n_tries + 1 + lag], 
         scaled_ess_history[: n_tries + lag], 
         beta_history[: n_tries + 1 + lag], 
-        elapsed_time
+        elapsed_time,
     )

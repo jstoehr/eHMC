@@ -12,7 +12,7 @@ def save_checkpoint(
     path: str | Path,
     y = None,
     log_w_is = None,
-):
+) -> None:
     """
     Save a checkpoint to a file, including histories and optionally the sample and log weights.
     
@@ -31,7 +31,7 @@ def save_checkpoint(
         "beta_history": beta_history,
         "ess_history": ess_history,
         "scaled_ess_history": scaled_ess_history,
-        "elapsed_time": elapsed_time
+        "elapsed_time": elapsed_time,
     }
     if y is not None:
         checkpoint['y'] = y.detach().cpu()
@@ -45,7 +45,10 @@ def save_checkpoint(
 
 
 
-def load_checkpoint(path: str | Path, device: torch.device):
+def load_checkpoint(
+    path: str | Path, 
+    device: torch.device,
+) -> dict:
     """
     Load a checkpoint from a file and move tensors to the specified device.
     
@@ -72,7 +75,11 @@ def load_checkpoint(path: str | Path, device: torch.device):
 
 
 
-def save_history_to_parquet(history: list, filename: str, column: str):
+def save_history_to_parquet(
+    history: list, 
+    filename: str, 
+    column: str,
+) -> None:
     """
     Save a history list to a Parquet file with a specified column name.
     
@@ -93,8 +100,8 @@ def save_warmup_sample(
     y: torch.Tensor, 
     weights: torch.Tensor, 
     filename: str,
-    col_names: list[str] = None
-):
+    col_names: list[str] = None,
+) -> None:
     """
     Save the warmup sample and corresponding weights to a Parquet file.
     

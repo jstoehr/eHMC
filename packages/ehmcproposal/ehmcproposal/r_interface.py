@@ -3,7 +3,10 @@ import torch
 from rpy2.robjects import FloatVector
 
 
-def apply_r_log_pdf(target_log_pdf, x_tensor: torch.Tensor) -> torch.Tensor:
+def apply_r_log_pdf(
+    target_log_pdf, 
+    x_tensor: torch.Tensor,
+) -> torch.Tensor:
     """
     Apply an R log PDF function to a PyTorch tensor.
     

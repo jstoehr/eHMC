@@ -33,9 +33,11 @@ def normalize_log_weights(log_w: torch.Tensor) -> torch.Tensor:
 
 
  
-def f_ess(log_weights_shift: torch.Tensor, 
-          beta: float, 
-          ess_t: float) -> float:
+def f_ess(
+    log_weights_shift: torch.Tensor, 
+    beta: float, 
+    ess_t: float,
+) -> float:
     """
     Target function for the dichotomy search to find the beta that achieves the target effective sample size (ESS).
     
@@ -60,7 +62,7 @@ def reweight_sample(
     log_weights: torch.Tensor, 
     ess_t: float, 
     beta_init: float=0.0, 
-    precision: float=1e-6
+    precision: float=1e-6,
 ) -> tuple[torch.Tensor, float, float, float]:
     """
     Reweights a sample based on the provided weights.
