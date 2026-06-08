@@ -11,6 +11,6 @@ dependencies:
   - pip:
       - rpy2==3.5.17
       - torch==2.5.1
-      - zuko==1.3.1
+      - zuko>=1.5.0
       - progressbar2==4.5.0
       - -e .
