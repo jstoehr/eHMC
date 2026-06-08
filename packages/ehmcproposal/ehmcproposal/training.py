@@ -11,7 +11,7 @@ from .config import FlowConfig
 def train_proposal(
     y: torch.Tensor,
     cov: torch.Tensor | None = None,
-    config: FlowConfig = FlowConfig(),
+    config: FlowConfig | None = None,
     flow = None
 ):
     """
@@ -27,6 +27,7 @@ def train_proposal(
     Returns:
         flow (zuko.flows.MAF or zuko.flows.RNVP): The trained flow model.
     """
+    fconfig = FlowConfig() if fconfig is None else fconfig
     
     y = y.detach()
     n_samples = y.size(0)
