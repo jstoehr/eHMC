@@ -1,7 +1,9 @@
+import math
 import torch
 
 from rpy2.robjects import FloatVector
-
+from rpy2.rinterface_lib.embedded import RRuntimeError
+from rpy2.rinterface_lib import callbacks
 
 def apply_r_log_pdf(
     target_log_pdf, 
@@ -17,12 +19,36 @@ def apply_r_log_pdf(
     Returns:
         torch.Tensor: A tensor of log probabilities for each sample.
     """
-    log_probs = []
-    
-    for row in x_tensor:
-        row_np = row.detach().cpu().numpy()
-        r_vec = FloatVector(row_np.tolist())
-        log_prob = target_log_pdf(r_vec)[0]  # Extract R scalar
-        log_probs.append(log_prob)
-        
-    return torch.tensor(log_probs, dtype=torch.float32, device=x_tensor.device)
+    dtype = torch.float32
+    finfo = torch.finfo(dtype)
+
+    log_probs = torch.empty(
+        x_tensor.shape[0],
+        dtype=dtype,
+        device=x_tensor.device,
+    )
+
+    old_callback = callbacks.consolewrite_warnerror
+    callbacks.consolewrite_warnerror = lambda _: None
+
+    try:
+        for i, row in enumerate(x_tensor):
+            r_vec = FloatVector(row.detach().cpu().tolist())
+
+            try:
+                value = float(target_log_pdf(r_vec)[0])
+
+                if math.isfinite(value):
+                    value = max(min(value, finfo.max), finfo.min)
+                else:
+                    value = float("-inf")
+
+            except RRuntimeError:
+                value = float("-inf")
+
+            log_probs[i] = value
+
+    finally:
+        callbacks.consolewrite_warnerror = old_callback
+
+    return log_probs
