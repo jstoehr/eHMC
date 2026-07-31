@@ -178,8 +178,20 @@ public:
     // --- Adaptation method
 
     // --- Model containers
-    double log_pdf = Rcpp::as<double>((*target_log_pdf)(theta));
-    arma::vec grad_log_pdf = Rcpp::as<arma::vec>((*target_grad_log_pdf)(theta));
+    double log_pdf;
+    arma::vec grad_log_pdf;
+    try {
+      log_pdf = Rcpp::as<double>((*target_log_pdf)(theta));
+      grad_log_pdf =
+          Rcpp::as<arma::vec>((*target_grad_log_pdf)(theta));
+    } catch (...) {
+      l = 0;
+      eps = 0.0;
+      accept_stat = 0.0;
+      return;
+    }
+    // double log_pdf = Rcpp::as<double>((*target_log_pdf)(theta));
+    // arma::vec grad_log_pdf = Rcpp::as<arma::vec>((*target_grad_log_pdf)(theta));
 
     // --- Metropolis Hastings acceptance probability
     double mh_prob = 0.0;
@@ -267,18 +279,23 @@ public:
         double eps_b = eps;
         for (size_t i = 0; i < adapt_control.max_bisect_iter; ++i) {
           eps = 0.5 * (eps_a + eps_b);
-          this->longest_batch(weight, theta, v, log_pdf, grad_log_pdf,
-                              eps, l,
-                              mh_prob, sum_w, m1_temp, m2_temp);
-          accept_stat = mh_prob;
-          if (std::abs(mh_prob - adapt_control.adapt_delta) < adapt_control.tol or std::abs(eps_a - eps_b) < 1e-3 * eps_a) {
-            break;
-          }
+          // this->longest_batch(weight, theta, v, log_pdf, grad_log_pdf,
+          //                     eps, l,
+          //                     mh_prob, sum_w, m1_temp, m2_temp);
+          success = longest_batch_safe();
+          if (success) {
+            accept_stat = mh_prob;
+            if (std::abs(mh_prob - adapt_control.adapt_delta) < adapt_control.tol or std::abs(eps_a - eps_b) < 1e-3 * eps_a) {
+              break;
+            }
 
-          if (mh_prob < adapt_control.adapt_delta - adapt_control.tol) {
-            eps_b = eps;
+            if (mh_prob < adapt_control.adapt_delta - adapt_control.tol) {
+              eps_b = eps;
+            } else {
+              eps_a = eps;
+            }
           } else {
-            eps_a = eps;
+            eps_b = eps;
           }
         }
       } else if (mh_prob > adapt_control.adapt_delta + adapt_control.tol) {
