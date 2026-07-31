@@ -27,7 +27,12 @@ load_run_output <- function(opt) {
 
 extract_full_array <- function(output, opt, pars) {
   if (opt$algo == "nuts") {
-    return(rstan::extract(output, permuted = FALSE, inc_warmup = FALSE))
+    return(rstan::extract(
+      output, 
+      pars = c(pars, "lp__"),
+      permuted = FALSE, 
+      inc_warmup = FALSE)
+    )
   }
   
   out <- array(
@@ -219,6 +224,6 @@ get_summary <- function(opt, output = NULL, data_dir = NULL) {
     )
   ) %>%
     add_run_metadata(opt)
-
+  
   return(list(param_stats = param_stats, diagnosis = diagnosis))
 }
