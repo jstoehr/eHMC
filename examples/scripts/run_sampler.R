@@ -115,11 +115,21 @@ if (!file.exists(algo_file)) {
   fit <- ehmcexamples::get_stanfit(opt$model, data)
   
   target_log_pdf <- function(pars) {
-    rstan::log_prob(fit, pars, FALSE)
+    tryCatch(
+      rstan::log_prob(fit, pars, FALSE),
+      error = function(e) {
+        stop(simpleError("LOG_PROB_ERROR: unable to evaluate the target log density at the current parameter values."))
+      }
+    )
   }
   
   target_grad_log_pdf <- function(pars) {
-    rstan::grad_log_prob(fit, pars, FALSE)
+    tryCatch(
+      rstan::grad_log_prob(fit, pars, FALSE),
+      error = function(e) {
+        stop(simpleError("GRAD_LOG_PROB_ERROR: unable to evaluate the target gradient at the current parameter values."))
+      }
+    )
   }
   
   set.seed(opt$seed)
