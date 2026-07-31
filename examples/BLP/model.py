@@ -108,17 +108,17 @@ def rprop_init_deprecated(
 
 def rprop_init(
     n: int,
-    data=None,
+    data = None,
     seed: int | None = None,
-    device=torch.device("cpu"),
-    dtype=torch.float32,
+    device = torch.device("cpu"),
+    dtype = torch.float32,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Sampling from the initial proposal distribution."""
     if seed is not None:
         torch.manual_seed(seed)
 
     if data is None:
-        data = get_data(device=device, dtype=dtype)
+        data = get_data(device = device, dtype = dtype)
 
     X = data["X"]
     y = data["y"]
@@ -126,7 +126,7 @@ def rprop_init(
     k = data["K"]
 
     # --- Prior precision
-    prior_prec = torch.eye(k, device=X.device, dtype=X.dtype) / (sig * sig)
+    prior_prec = torch.eye(k, device = X.device, dtype = X.dtype) / (sig * sig)
 
     # --- Approximate mode by ridge least squares
     XtX = X.T @ X
@@ -142,8 +142,8 @@ def rprop_init(
 
     # --- Sample and compute log probabilities from the multivariate normal distribution
     dist = torch.distributions.MultivariateNormal(
-        loc=mu_prior,
-        covariance_matrix=cov,
+        loc = mu_prior,
+        covariance_matrix = cov,
     )
 
     sample = dist.sample((n,))

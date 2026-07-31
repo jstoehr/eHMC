@@ -2,6 +2,7 @@
 .Rhistory
 *.RData
 .Ruserdata
+.Rapp.history
 .positai
 .DS_Store
 *.egg-info
@@ -9,5 +10,6 @@
 *.so
 *.parquet
 *.pt
+*.jpeg
 *__pycache__/
 *trash/
