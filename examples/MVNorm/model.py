@@ -13,13 +13,13 @@ def get_data(
     d = 100
     rho = 0.99
 
-    A = torch.zeros((d, d), device=device, dtype=dtype)
+    A = torch.zeros((d, d), device = device, dtype = dtype)
 
     for i in range(d):
         for j in range(i, d):
             A[i, j] = rho ** (j - i)
 
-    A = A + A.T - torch.eye(d, device=device, dtype=dtype)
+    A = A + A.T - torch.eye(d, device = device, dtype = dtype)
     A_inv = torch.linalg.inv(A)
 
     return {
@@ -34,7 +34,8 @@ def get_pars_name(data = None) -> list[str]:
     if data is None:
         data = get_data()
 
-    return [f"x[{i}]" for i in range(1, data["d"] + 1)]
+    d = int(data["d"])
+    return [f"x[{i}]" for i in range(1, d + 1)]
 
 
 
@@ -50,13 +51,13 @@ def rprop_init(
         torch.manual_seed(seed)
 
     if data is None:
-        data = get_data(device=device, dtype=dtype)
+        data = get_data(device = device, dtype = dtype)
 
     d = data["d"]
-    A = data["A"].to(device=device, dtype=dtype)
+    A = data["A"].to(device = device, dtype = dtype)
 
     # --- Mixture distribution parameters
-    mu = torch.zeros(d, device=A.device, dtype=A.dtype)
+    mu = torch.zeros(d, device = A.device, dtype = A.dtype)
 
     eigvals, eigvecs = torch.linalg.eigh(A)
 
@@ -81,13 +82,13 @@ def rprop_init(
     n_1 = int(math.floor(alpha * n))
     n_2 = n - n_1
 
-    dist_1 = torch.distributions.MultivariateNormal(mu, covariance_matrix=sigma_1)
-    dist_2 = torch.distributions.MultivariateNormal(mu, covariance_matrix=sigma_2)
+    dist_1 = torch.distributions.MultivariateNormal(mu, covariance_matrix = sigma_1)
+    dist_2 = torch.distributions.MultivariateNormal(mu, covariance_matrix = sigma_2)
 
     sample_1 = dist_1.sample((n_1,))
     sample_2 = dist_2.sample((n_2,))
 
-    sample = torch.cat([sample_1, sample_2], dim=0)
+    sample = torch.cat([sample_1, sample_2], dim = 0)
 
     # --- Compute log probabilities for the mixture distribution
     log_p1 = dist_1.log_prob(sample)
@@ -98,7 +99,7 @@ def rprop_init(
             math.log(alpha) + log_p1,
             math.log(1.0 - alpha) + log_p2,
         ]),
-        dim=0,
+        dim = 0,
     )
 
     return sample, lp__
