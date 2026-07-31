@@ -27,6 +27,7 @@ class FlowConfig:
     transforms: int = 5
     hidden_features: tuple[int, ...] = (64, 64)
     randperm: bool = True
+    use_cov: bool = False
     max_epochs: int = 512
     patience: int = 30
     learning_rate: float = 1e-3

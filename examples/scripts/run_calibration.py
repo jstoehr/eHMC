@@ -137,6 +137,7 @@ def main():
     parser.add_argument("--transforms", type = int, default = 5, help = "The number of transformation blocks in the MAF.")
     parser.add_argument("--hidden_features", type = str, default = "(32, 32)", help = "A tuple defining the hidden layer sizes in the MAF (e.g., '(64, 64)').")
     parser.add_argument("--randperm", type = int, default = 1, help = "Whether to use random permutation.")
+    parser.add_argument("--use_cov", type = int, default = 0, help = "Whether to use the empirical covariance in the proposal adaptation.")
     parser.add_argument("--max_epochs", type = int, default = 2048, help = "The maximum number of epochs to train for.")
     parser.add_argument("--patience", type = int, default = 20, help = "Lag for the early stopping rule.")
     parser.add_argument("--learning_rate", type = float, default = 1e-3, help = "Learning rate of Adam optimizer.")
@@ -206,6 +207,7 @@ def main():
         transforms = args.transforms,
         hidden_features = hidden_features,
         randperm = bool(args.randperm),
+        use_cov = bool(args.use_cov),
         max_epochs = args.max_epochs,
         patience = args.patience,
         learning_rate = args.learning_rate,
