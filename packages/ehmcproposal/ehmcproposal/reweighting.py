@@ -49,8 +49,13 @@ def f_ess(
     Returns:
         float: The difference between the computed ESS and the target ESS.
     """
-    scaled = beta * log_weights_shift
-    w = torch.exp(scaled)
+    if beta == 0.0:
+        w = torch.zeros_like(log_weights_shift)
+        w[torch.isfinite(log_weights_shift)] = 1.0
+    else:
+        scaled = beta * log_weights_shift
+        w = torch.exp(scaled)
+
     ess = (w.sum() ** 2) / (w ** 2).sum()
     return ess.item() - ess_t
    
@@ -82,8 +87,9 @@ def reweight_sample(
     """
     # --- Compute the weights
     log_w_shift = log_weights - torch.logsumexp(log_weights, dim=0)
-    weights = torch.exp(log_w_shift)
-    weights = weights / weights.sum()
+    # weights = torch.exp(log_w_shift)
+    # weights = weights / weights.sum()
+    weights = torch.softmax(log_weights, dim=0)
     # --- Compute current ESS
     initial_ess = effective_sample_size(weights)
     beta = beta_init
@@ -111,8 +117,9 @@ def reweight_sample(
                     f_a = f_beta
             beta = (a + b) / 2.0
         # --- Compute the final weights with the found beta
-        scaled_weights = torch.exp(beta * log_w_shift)
-        scaled_weights = scaled_weights / scaled_weights.sum()
+        # scaled_weights = torch.exp(beta * log_w_shift)
+        # scaled_weights = scaled_weights / scaled_weights.sum()
+        scaled_weights = torch.softmax(beta * log_weights, dim=0)
         scaled_ess = effective_sample_size(scaled_weights)
     else:
         scaled_ess = initial_ess
