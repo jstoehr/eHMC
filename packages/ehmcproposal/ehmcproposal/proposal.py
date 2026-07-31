@@ -111,6 +111,107 @@ def resample_from_initial_proposal(
 
 
 
+def _robust_weighted_covariance(
+    y: torch.Tensor,
+    scaled_weights: torch.Tensor,
+    min_ess: float = 2.0,
+    jitter: float = 1e-6,
+):
+    """
+    Return a finite positive-definite weighted covariance matrix,
+    or None when the weighted sample is too degenerate.
+    """
+    if y.ndim != 2:
+        raise ValueError(f"`y` must be 2-D, got shape {tuple(y.shape)}.")
+
+    weights = scaled_weights.reshape(-1)
+
+    if weights.numel() != y.shape[0]:
+        raise ValueError(
+            f"Expected {y.shape[0]} weights, got {weights.numel()}."
+        )
+
+    # --- Remove observations with non-finite values or invalid weights.
+    valid = (
+        torch.isfinite(y).all(dim=1)
+        & torch.isfinite(weights)
+        & (weights >= 0)
+    )
+
+    y_valid = y[valid]
+    weights = weights[valid]
+
+    if y_valid.shape[0] < 2:
+        print("Too few valid observations. Using default covariance.")
+        return None
+
+    weight_sum = weights.sum()
+
+    if not torch.isfinite(weight_sum) or weight_sum <= 0:
+        print("Invalid importance weights. Using default covariance.")
+        return None
+
+    weights = weights / weight_sum
+
+    # Kish effective sample size.
+    ess = 1.0 / torch.sum(weights.square())
+
+    if not torch.isfinite(ess) or ess < min_ess:
+        print(
+            f"Importance weights are too concentrated "
+            f"(ESS={ess.item():.3f}). Using default covariance."
+        )
+        return None
+
+    # --- correction=0 avoids the degrees-of-freedom failure associated
+    # --- with the default unbiased correction when the weighted sample
+    # ---is nearly degenerate.
+    cov_emp = torch.cov(
+        y_valid.T,
+        aweights=weights,
+        correction=0,
+    )
+
+    if cov_emp.ndim == 0:
+        cov_emp = cov_emp.reshape(1, 1)
+
+    if not torch.isfinite(cov_emp).all():
+        print("Covariance contains NaN or Inf. Using default covariance.")
+        return None
+
+    # --- Enforce symmetry against numerical roundoff.
+    cov_emp = 0.5 * (cov_emp + cov_emp.T)
+
+    # --- Add scale-aware diagonal regularization.
+    dimension = cov_emp.shape[0]
+    average_variance = torch.diagonal(cov_emp).mean()
+
+    if not torch.isfinite(average_variance) or average_variance <= 0:
+        average_variance = torch.ones(
+            (),
+            device=cov_emp.device,
+            dtype=cov_emp.dtype,
+        )
+
+    cov_emp = cov_emp + jitter * average_variance * torch.eye(
+        dimension,
+        device=cov_emp.device,
+        dtype=cov_emp.dtype,
+    )
+
+    # --- Check positive definiteness without throwing an exception.
+    _, info = torch.linalg.cholesky_ex(cov_emp)
+
+    if info.item() != 0:
+        print("Regularized covariance is not positive definite. Using default covariance.")
+        return None
+
+    return cov_emp
+
+
+
+
+
 def pmc_proposal(
     rprop_init,
     target_log_pdf,
@@ -248,19 +349,25 @@ def pmc_proposal(
         beta_init = beta,
     )
     
-    print(f"Initial ESS: {current_ess:.2f}")
+    print(f"Initial ESS: {current_ess:.2f}. Scaled ESS: {scaled_ess:.2f}")
     
     while current_ess < ess_target and n_tries < pconfig.max_tries:
         start = time.perf_counter()
         n_tries += 1
         # --- Compute the emprical covariance
-        cov_emp = torch.cov(y.T, aweights=scaled_weights)
-        if not is_positive_definite(cov_emp):
-            print("Covariance matrix is not positive definite. Using default value.")
+        if fconfig.use_cov:
+            cov_emp = _robust_weighted_covariance(y, scaled_weights)
+        else:
             cov_emp = None
+
+        # cov_emp = torch.cov(y.T, aweights=scaled_weights)
+        # if not is_positive_definite(cov_emp):
+        #     print("Covariance matrix is not positive definite. Using default value.")
+        #     cov_emp = None
         # --- Resample the data
         indices = torch.multinomial(scaled_weights, pconfig.n_train, replacement=True)
         y_resampled = y[indices,:]
+
         # --- Train the MAF model with the resampled data
         flow = train_proposal(
             y_resampled,
@@ -273,7 +380,7 @@ def pmc_proposal(
             y = flow().sample((pconfig.n_train,))  
             # --- Compute the importance weights for the MAF sample
             proposal_lp__ = flow().log_prob(y)
-        
+                
         target_lp__ = apply_r_log_pdf(target_log_pdf, y)
         log_w_is = target_lp__ - proposal_lp__
         # --- Reweight the sample
